@@ -492,9 +492,10 @@ while not_sorted_link:    #如果還有link沒有進行排程,則不能結束
             for n in range(len(offsetname)):
                 if offsetname[n] == str(v):  
                     print('varName = %s : varValue = %d'%(str(v), z3_model[eval(offsetname[n])].as_long()))
+                    print('wrong value = %d'%(z3_model[eval(s)].as_long()))
                     tti = 'tt'+str(tmp_schedule_tt[n])
                     tti = eval(tti)
-                    tti[6] = int(z3_model[eval(s)].as_long())   # tti[6] = tti.offset  
+                    tti[6] = int(z3_model[eval(offsetname[n])].as_long())   # tti[6] = tti.offset  
                     print(tti)
                 else:
                     pass

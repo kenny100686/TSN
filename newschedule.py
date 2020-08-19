@@ -394,11 +394,11 @@ while not_sorted_link:    #如果還有link沒有進行排程,則不能結束
                     ca = "c"+str(c_number)
                     c_number = c_number+1
                     #把x1跟tt1結合起來,產生限制式, I guess this constraint combines "Link Constraint" and "Flow Transmission Constraint".
-                    m.addConstr(ttj[6]-tti[6]+l*ttj[0]-k*tti[0]-M*eval(va)<= tti_A-(ttj_B+ttj[7]+0.096), ca) # here, x = 0 or 1
+                    m.addConstr(ttj[6]-tti[6]+l*ttj[0]-k*tti[0]-M*eval(va)<= tti_A-(ttj_B+ttj[7]+0.096),ca) # here, x = 0 or 1
                     #如果想讓gate多保留time slot,就在0.096後面加1或n
                     ca = "c"+str(c_number)
                     c_number = c_number+1
-                    m.addConstr(tti[6]-ttj[6]+k*tti[0]-l*ttj[0]+M*eval(va)<= M+ttj_B-tti_A-(tti[7]+0.096), ca)   # here, x = 0 or 1
+                    m.addConstr(tti[6]-ttj[6]+k*tti[0]-l*ttj[0]+M*eval(va)<= M+ttj_B-tti_A-(tti[7]+0.096),ca)   # here, x = 0 or 1
                     x_number = x_number+1
 
         
@@ -459,6 +459,7 @@ while not_sorted_link:    #如果還有link沒有進行排程,則不能結束
         link_group_tt = sorted(tmp_array, key = itemgetter(1))  #依照所有的offset值排序
         print("\033[1;31;40m\tlink_group_tt %s\033[0m"%( link_group_tt))  #link_group_tt is [['tt1',0],['tt2',2],['tt1',100],['tt2',102]]
         #print("\033[1;31;40m\tlink_group_tt length is %d\033[0m"%(len(link_group_tt)))
+
 
 
         #依照每個tt進行time slot的推算
@@ -526,14 +527,14 @@ while not_sorted_link:    #如果還有link沒有進行排程,則不能結束
                 else:   #node is switch
                     nodesrc = path[nodeth]
                     nodedest = path[nodeth+1]
-                    linkname = "l"+nodesrc+"to"+nodedest  #lExtoEy, link's time slot
+                    linkname = "l"+nodesrc+"to"+nodedest  #lExtoEy , link's time slot
                     xmlentry_name = "nodeto"+nodesrc+"to"+nodedest #link's xml entry information
                     print("xmlentry name is", xmlentry_name)
                     xmlentry = eval(xmlentry_name)
                     print("xmlentry is", xmlentry)
 
                     
-                    xmlentry.sort(key = itemgetter('start'))
+                    #xmlentry = sorted(xmlentry, key = itemgetter('start'))
                     print("now calculating the link ", linkname)
                     linkname = eval(linkname)
                     #print(linkname)
@@ -548,7 +549,7 @@ while not_sorted_link:    #如果還有link沒有進行排程,則不能結束
                     e2 = nexthop_tt_start_time+operating_tt[7]+interframegap    #???
                     print('e2 = ', e2)
                     listvariable = 0
-
+                    
                     for listvariable in xmlentry:
 
                         s1 = listvariable['start']
@@ -565,29 +566,27 @@ while not_sorted_link:    #如果還有link沒有進行排程,則不能結束
                             #print("totalqueueingtime is", totalqueueingtime)
                             s2 = e1
                             e2 = s2+operating_tt[7]+interframegap
-                            print('s2 after shifting = ', s2)
-                            print('e2 after shifting = ', e2)
+
                     
-                    #判斷transmission time是否超過一格time slot,如果本身傳輸時間超過一個time slot,則沒關係,如果本身傳輸時間小於一單位的time slot,則向後延遲傳輸 
+                    #判斷transmission time是否超過一格time slot,如果本身傳輸時間超過一個time slot,則沒關係,如果本身傳輸時間小於一單位的time slot,則向後延遲傳輸 ???
                     e2floor = math.floor(e2)
                     s2floor = math.floor(s2)
-                    transfloor = operating_tt[7]
-                    #transfloor = math.floor(operating_tt[7]) #here is wrong
+                    transfloor = math.floor(operating_tt[7])
 
                     #先判斷是否有因為overlap而改變傳輸時間
                     if s2 == tmpuse:    #no overlap, tmpuse = ttoffset + operating_tt[7] + linkpropagationdelay
 
-                        if (e2floor-s2floor)>0: #排程的傳輸時間超出一格, s2 and e2 in different slots, I think that math.floor(e2-s2) is more precise
-                            if transfloor > (1 - interframegap): #自身傳輸時間就需要超出一格,不動作, I think that (1 - IFG) is more precise
+                        if (e2floor-s2floor)>0: #排程的傳輸時間超出一格, I guess that math.floor(e2-s2) is more precise
+                            if transfloor > 1: #自身傳輸時間就需要超出一格,不動作
                                 gate_open_time = math.floor(s2)
                                 gate_keep_time = math.ceil(e2)-gate_open_time
                                 nexthop_tt_start_time = e2-interframegap+linkpropagationdelay
                                 xmlentry.append({'send':link_group_tt[i][0], 'start':s2, 'end':e2, 'open':gate_open_time, 'length':gate_keep_time, 'bitvector':'00000001'})
                                 for used in range(gate_keep_time):
                                     linkname[gate_open_time+used] = linkname[gate_open_time+used]+1 #update link's time slot
-                            
+
                             else: #自身所需的time slot小於一格,但是佔用了兩格time slot做傳輸,將此TT向後移動
-                                gate_open_time = math.ceil(s2)  
+                                gate_open_time = math.ceil(s2)  #maybewrong, occupy other tti slot
                                 e2 = gate_open_time+operating_tt[7]+interframegap
                                 totalqueueingtime = totalqueueingtime+gate_open_time-tmpuse 
                                 ttiqd[0] = ttiqd[0]+gate_open_time-tmpuse
@@ -596,11 +595,10 @@ while not_sorted_link:    #如果還有link沒有進行排程,則不能結束
                                 xmlentry.append({'send':link_group_tt[i][0], 'start':gate_open_time, 'end':e2, 'open':gate_open_time, 'length':gate_keep_time, 'bitvector':'00000001'})
                                 for used in range(gate_keep_time):
                                     linkname[gate_open_time+used] = linkname[gate_open_time+used]+1
-                            
-
+                        
                         else: #本身傳輸時間就小於一格time slot
-                            gate_open_time = math.floor(s2) #if e2 - s2.floor > 1 means e2 and s2 are in different slot. 
-                            gate_keep_time = math.ceil(e2)-gate_open_time   #this may waste 1 slot when e2 and s2 are in different slot.
+                            gate_open_time = math.floor(s2)
+                            gate_keep_time = math.ceil(e2)-gate_open_time   #I guess that math.floor(e2) is more precise
                             nexthop_tt_start_time = e2-interframegap+linkpropagationdelay
                             xmlentry.append({'send':link_group_tt[i][0], 'start':s2, 'end':e2, 'open':gate_open_time, 'length':gate_keep_time, 'bitvector':'00000001'})
                             for used in range(gate_keep_time):

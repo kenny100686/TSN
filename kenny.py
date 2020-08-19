@@ -394,11 +394,11 @@ while not_sorted_link:    #如果還有link沒有進行排程,則不能結束
                     ca = "c"+str(c_number)
                     c_number = c_number+1
                     #把x1跟tt1結合起來,產生限制式, I guess this constraint combines "Link Constraint" and "Flow Transmission Constraint".
-                    m.addConstr(ttj[6]-tti[6]+l*ttj[0]-k*tti[0]-M*eval(va)<= tti_A-(ttj_B+ttj[7]+0.096), ca) # here, x = 0 or 1
+                    m.addConstr(ttj[6]-tti[6]+l*ttj[0]-k*tti[0]-M*eval(va)<= tti_A-(ttj_B+ttj[7]+0.096),ca) # here, x = 0 or 1
                     #如果想讓gate多保留time slot,就在0.096後面加1或n
                     ca = "c"+str(c_number)
                     c_number = c_number+1
-                    m.addConstr(tti[6]-ttj[6]+k*tti[0]-l*ttj[0]+M*eval(va)<= M+ttj_B-tti_A-(tti[7]+0.096), ca)   # here, x = 0 or 1
+                    m.addConstr(tti[6]-ttj[6]+k*tti[0]-l*ttj[0]+M*eval(va)<= M+ttj_B-tti_A-(tti[7]+0.096),ca)   # here, x = 0 or 1
                     x_number = x_number+1
 
         
@@ -652,7 +652,7 @@ while not_sorted_link:    #如果還有link沒有進行排程,則不能結束
                 except:
                     pass
         fo.close()
-        
+        tmp_schedule_tt.clear()    
     
     else:    #若link上沒有需要排成的tt則跳過這個link
         #print('else')
@@ -660,7 +660,7 @@ while not_sorted_link:    #如果還有link沒有進行排程,則不能結束
  
 
 
-    tmp_schedule_tt.clear()
+    #tmp_schedule_tt.clear()
     #排完要pop掉這個link
     not_sorted_link.pop(0)
 
